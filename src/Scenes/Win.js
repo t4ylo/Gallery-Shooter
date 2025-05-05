@@ -1,15 +1,19 @@
-class GameOver extends Phaser.Scene {
+class Win extends Phaser.Scene {
     constructor() {
-        super("gameOver");
+        super("win");
     }
 
+    init(data) {
+        this.finalScore = data.score;
+    }
 
     create() {
-        this.add.text(250, game.config.height/2, "GAME OVER", {
+
+        this.add.text(275, game.config.height/2 - 20, "YOU WIN!", {
             fontFamily: 'Times',
             fontSize: 48,
-            color: '#ff0000'
-        });
+            color: '#00aa00'
+        })
 
         this.add.text(275, game.config.height/2 + 50, "Press SPACE to play again", {
             fontFamily: 'Times',
@@ -20,7 +24,5 @@ class GameOver extends Phaser.Scene {
         this.input.keyboard.once("keydown-SPACE", () => {
             this.scene.start("level_1");
         });
-
-    
-}
+    }
 }

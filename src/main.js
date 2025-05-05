@@ -11,7 +11,7 @@ let config = {
     },
     width: 800,
     height: 600,
-    scene: [Level_1, GameOver] ,
+    scene: [Start, Level_1, Level_2, GameOver, Win] ,
     fps: { forceSetTimeOut: true, target: 30 }
 }
 
