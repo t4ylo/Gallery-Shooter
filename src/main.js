@@ -11,7 +11,7 @@ let config = {
     },
     width: 800,
     height: 600,
-    scene: [oneDmove] ,
+    scene: [Level_1, GameOver] ,
     fps: { forceSetTimeOut: true, target: 30 }
 }
 

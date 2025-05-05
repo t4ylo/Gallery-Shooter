@@ -35,7 +35,12 @@ class Level_1 extends Phaser.Scene {
         //background/landscape stuff
         this.load.image("level_1_bg", "backgroundColorGrass.png");
         this.load.image("level_1_house", "house2.png");
-        this.load.image("level_1_fence", "fence.png");
+
+        // For animation
+        this.load.image("blackSmoke00", "blackSmoke00.png");
+        this.load.image("blackSmoke01", "blackSmoke01.png");
+        this.load.image("blackSmoke02", "blackSmokef02.png");
+        this.load.image("blackSmoke03", "blackSmokef03.png");
 
         // Load the Kenny Rocket Square bitmap font
         // This was converted from TrueType format into Phaser bitmap
@@ -50,54 +55,77 @@ class Level_1 extends Phaser.Scene {
     create() {
         let my = this.my;
 
-        my.sprite.cow = this.add.sprite(game.config.width/2, game.config.height - 40, "cow");
-        my.sprite.cow.setScale(0.25);
+        my.sprite.background = this.add.sprite(game.config.width/2, game.config.height/2, "level_1_bg");
+        my.sprite.house = this.add.sprite(game.config.width -75, game.config.height -250, "level_1_house");
+        my.sprite.house.setScale(0.5);
 
-        my.sprite.alien1 = this.add.sprite(game.config.width/2, 80, "norm-alien");
-        my.sprite.alien1.setScale(0.25);
+        my.sprite.cow = this.add.sprite(game.config.width/2, game.config.height - 40, "cow");
+        my.sprite.cow.setScale(0.5);
+
+        this.path = this.add.path(50, 100);           
+        this.path.lineTo(750, 100);                   
+        my.sprite.alien1 = this.add.follower(this.path, 50, 100, "norm-alien").setScale(0.5);
+        this.my.sprite.alienBullets = [];
+        this.alienBulletSpeed = 4;
+
+        this.time.addEvent({
+            delay: 1000,  
+            callback: this.fireAlienBullet,
+            callbackScope: this,
+            loop: true
+        });
+
+
+        my.sprite.alien1.startFollow({
+            duration: 5000,        
+            repeat: -1,           
+            yoyo: true,           
+            ease: 'Sine.easeInOut'
+        });
+
+
         my.sprite.alien1.scorePoints = 100;
 
-        // Notice that in this approach, we don't create any bullet sprites in create(),
-        // and instead wait until we need them, based on the number of space bar presses
+        
 
-        // Create white puff animation
         this.anims.create({
             key: "puff",
             frames: [
-                { key: "whitePuff00" },
-                { key: "whitePuff01" },
-                { key: "whitePuff02" },
-                { key: "whitePuff03" },
+                { key: "blackSmoke00" },
+                { key: "blackSmoke01" },
+                { key: "blackSmoke02" },
+                { key: "blackSmoke03" },
             ],
             frameRate: 20,    // Note: case sensitive (thank you Ivy!)
             repeat: 5,
             hideOnComplete: true
         });
 
+        this.playerLives = 3;
+        this.my.sprite.hearts = [];
+
+
+        for (let i = 0; i < 3; i++) {
+            let heart = this.add.sprite(30 + i * 40, 30, "heart").setScale(0.5);
+            this.my.sprite.hearts.push(heart);
+        }
         // Create key objects
         this.left = this.input.keyboard.addKey("A");
         this.right = this.input.keyboard.addKey("D");
-        this.nextScene = this.input.keyboard.addKey("S");
         this.space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Set movement speeds (in pixels/tick)
-        this.playerSpeed = 5;
-        this.bulletSpeed = 5;
+        this.playerSpeed = 10;
+        this.bulletSpeed = 10;
 
         // update HTML description
-        document.getElementById('description').innerHTML = '<h2>Level 1.js</h2><br>A: left // D: right // Space: fire/emit // S: Next Scene'
+        document.getElementById('description').innerHTML = '<h2>Level 1.js</h2><br>A: left // D: right // Space: fire/emit'
 
         // Put score on screen
         my.text.score = this.add.bitmapText(580, 0, "rocketSquare", "Score " + this.myScore);
 
-        // Put title on screen
-        this.add.text(10, 5, "Farm Fight!", {
-            fontFamily: 'Times, serif',
-            fontSize: 24,
-            wordWrap: {
-                width: 60
-            }
-        });
+        
+        
 
     }
 
@@ -107,7 +135,7 @@ class Level_1 extends Phaser.Scene {
         // Moving left
         if (this.left.isDown) {
             // Check to make sure the sprite can actually move left
-            if (my.sprite.cowt.x > (my.sprite.cow.displayWidth/2)) {
+            if (my.sprite.cow.x > (my.sprite.cow.displayWidth/2)) {
                 my.sprite.cow.x -= this.playerSpeed;
             }
         }
@@ -122,59 +150,76 @@ class Level_1 extends Phaser.Scene {
 
         // Check for bullet being fired
         if (Phaser.Input.Keyboard.JustDown(this.space)) {
-            // Are we under our bullet quota?
             if (my.sprite.bullet.length < this.maxBullets) {
-                my.sprite.bullet.push(this.add.sprite(
-                    my.sprite.cow.x, my.sprite.cow.y-(my.sprite.cow.displayHeight/2), "player-proj")
+                let newBullet = this.add.sprite(
+                    my.sprite.cow.x,
+                    my.sprite.cow.y - (my.sprite.cow.displayHeight / 2),
+                    "player-proj"
                 );
+                newBullet.setScale(0.25);  // Scale it down here
+                my.sprite.bullet.push(newBullet);
             }
         }
 
-        // Remove all of the bullets which are offscreen
-        // filter() goes through all of the elements of the array, and
-        // only returns those which **pass** the provided test (conditional)
-        // In this case, the condition is, is the y value of the bullet
-        // greater than zero minus half the display height of the bullet? 
-        // (i.e., is the bullet fully offscreen to the top?)
-        // We store the array returned from filter() back into the bullet
-        // array, overwriting it. 
-        // This does have the impact of re-creating the bullet array on every 
-        // update() call. 
+        
         my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
-
-        // Check for collision with the hippo
+        
+        
         for (let bullet of my.sprite.bullet) {
             if (this.collides(my.sprite.alien1, bullet)) {
-                // start animation
-                this.puff = this.add.sprite(my.sprite.alien1.x, my.sprite.alien1.y, "whitePuff03").setScale(0.25).play("puff");
-                // clear out bullet -- put y offscreen, will get reaped next update
+                this.puff = this.add.sprite(
+                    my.sprite.alien1.x, my.sprite.alien1.y, "whitePuff03"
+                ).setScale(0.25).play("puff");
+            
                 bullet.y = -100;
-                my.sprite.alien1.visible = false;
-                my.sprite.alien1.x = -100;
+            
+                // Make alien invisible instead of moving it
+                this.my.sprite.alien1.setAlpha(0);
+            
                 // Update score
-                this.myScore += my.sprite.alien.scorePoints;
+                this.myScore += my.sprite.alien1.scorePoints;
                 this.updateScore();
-                // Play sound
-                
-                // Have new hippo appear after end of animation
+            
+                // Make alien reappear after puff finishes
                 this.puff.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-                    this.my.sprite.alien1.visible = true;
-                    this.my.sprite.alien1.x = Math.random()*config.width;
+                    this.my.sprite.alien1.setAlpha(1);
                 }, this);
-
             }
         }
 
-        // Make all of the bullets move
+       
         for (let bullet of my.sprite.bullet) {
             bullet.y -= this.bulletSpeed;
         }
 
-    
+        for (let bullet of my.sprite.alienBullets) {
+            bullet.y += this.alienBulletSpeed;
+        }
+        
+        
+        my.sprite.alienBullets = my.sprite.alienBullets.filter(b => b.y < config.height + b.displayHeight / 2);
+
+        for (let bullet of my.sprite.alienBullets) {
+            if (this.collides(my.sprite.cow, bullet)) {
+                bullet.y = config.height + 100;  
+                this.playerLives--;
+        
+                if (this.playerLives >= 0) {
+                    this.my.sprite.hearts[this.playerLives].setVisible(false);
+                }
+        
+                
+                if (this.playerLives <= 0) {
+                    this.gameOver();
+                }
+        
+                break;  
+            }
+        }
 
     }
 
-    // A center-radius AABB collision check
+    
     collides(a, b) {
         if (Math.abs(a.x - b.x) > (a.displayWidth/2 + b.displayWidth/2)) return false;
         if (Math.abs(a.y - b.y) > (a.displayHeight/2 + b.displayHeight/2)) return false;
@@ -184,6 +229,29 @@ class Level_1 extends Phaser.Scene {
     updateScore() {
         let my = this.my;
         my.text.score.setText("Score " + this.myScore);
+    }
+
+    fireAlienBullet() {
+        let my = this.my;
+        let bullet = this.add.sprite(
+            my.sprite.alien1.x,
+            my.sprite.alien1.y + my.sprite.alien1.displayHeight / 2,
+            "norm-proj"
+        );
+        bullet.setScale(0.5);
+        my.sprite.alienBullets.push(bullet);
+    }
+
+    gameOver() {
+        
+        this.time.removeAllEvents();
+
+        this.add.text(300, 250, "GAME OVER", {
+            fontFamily: 'Times',
+            fontSize: 32,
+            color: '#ff0000'
+        });
+    
     }
 
 }
