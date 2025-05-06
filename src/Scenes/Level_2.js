@@ -29,12 +29,15 @@ class Level_2 extends Phaser.Scene {
         this.load.image("frog", "frog.png");
         this.load.image("heart", "heart.png");
         this.load.image("player-proj", "laserYellow_burst.png");
+        this.load.audio("pew-player", "laserRetro_004.ogg"); 
 
         // space stuff
         this.load.image("norm-alien", "shipBlue_manned.png");
         this.load.image("brut-alien", "shipPink_manned.png");
         this.load.image("norm-proj", "laserBlue1.png");
         this.load.image("brut-proj", "laserPink2.png");
+        this.load.audio("pew-norm", "laserSmall_001.ogg"); 
+        this.load.audio("pew-brut", "laserLarge_002.ogg"); 
 
         //background/landscape stuff
         this.load.image("level_2_bg", "backgroundColorForest.png");
@@ -176,6 +179,7 @@ class Level_2 extends Phaser.Scene {
                 newBullet.setScale(0.25);  // Scale it down here
                 my.sprite.bullet.push(newBullet);
             }
+            this.sfx.player.play()
         }
 
         
@@ -282,6 +286,7 @@ class Level_2 extends Phaser.Scene {
         );
         bullet.setScale(0.5);
         my.sprite.alienBullets.push(bullet);
+        this.sfx.norm.play()
 
         if (my.sprite.brute) {
             let bruteBullet = this.add.sprite(
@@ -292,6 +297,7 @@ class Level_2 extends Phaser.Scene {
             bruteBullet.setScale(0.5);
             bruteBullet.isBrute = true;
             my.sprite.alienBullets.push(bruteBullet);
+            this.sfx.brut.play()
         }
     }
 
