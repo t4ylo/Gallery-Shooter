@@ -34,6 +34,8 @@ class Level_1 extends Phaser.Scene {
         this.load.image("brut-proj", "laserPink2.png");
         this.load.audio("pew-norm", "laserSmall_001.ogg"); 
         this.load.audio("pew-brut", "laserLarge_002.ogg"); 
+        this.load.audio("explode-norm", "lowFrequency_explosion_000.ogg"); 
+        this.load.audio("explode-brut", "lowFrequency_explosion_001.ogg"); 
 
         //background/landscape stuff
         this.load.image("level_1_bg", "backgroundColorGrass.png");
@@ -57,6 +59,7 @@ class Level_1 extends Phaser.Scene {
 
     create() {
         let my = this.my;
+        this.sfx = {};
 
         my.sprite.background = this.add.sprite(game.config.width/2, game.config.height/2, "level_1_bg");
         my.sprite.house = this.add.sprite(game.config.width -75, game.config.height -250, "level_1_house");
@@ -131,6 +134,9 @@ class Level_1 extends Phaser.Scene {
         this.sfx.norm = this.sound.add("pew-norm");
         this.sfx.brut = this.sound.add("pew-brut");
 
+        this.sfx.norm_ex = this.sound.add("explode-norm");
+        this.sfx.brut_ex = this.sound.add("explode-brut");
+
     }
 
     update() {
@@ -175,6 +181,8 @@ class Level_1 extends Phaser.Scene {
                 this.puff = this.add.sprite(
                     my.sprite.alien1.x, my.sprite.alien1.y, "blackSmoke03"
                 ).setScale(0.25).play("puff");
+
+                this.sfx.norm_ex.play({ volume: 2.5 })
             
                 bullet.y = -100;
             
@@ -190,6 +198,7 @@ class Level_1 extends Phaser.Scene {
                     this.my.sprite.alien1.setAlpha(1);
                 }, this);
             }
+            
         }
 
        

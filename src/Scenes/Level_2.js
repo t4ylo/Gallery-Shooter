@@ -38,6 +38,8 @@ class Level_2 extends Phaser.Scene {
         this.load.image("brut-proj", "laserPink2.png");
         this.load.audio("pew-norm", "laserSmall_001.ogg"); 
         this.load.audio("pew-brut", "laserLarge_002.ogg"); 
+        this.load.audio("explode-norm", "lowFrequency_explosion_000.ogg"); 
+        this.load.audio("explode-brut", "lowFrequency_explosion_001.ogg"); 
 
         //background/landscape stuff
         this.load.image("level_2_bg", "backgroundColorForest.png");
@@ -61,6 +63,7 @@ class Level_2 extends Phaser.Scene {
 
     create() {
         let my = this.my;
+        this.sfx = {};
 
         my.sprite.background = this.add.sprite(game.config.width/2, game.config.height/2, "level_2_bg");
         my.sprite.house = this.add.sprite(game.config.width -75, game.config.height -250, "level_2_house");
@@ -76,8 +79,15 @@ class Level_2 extends Phaser.Scene {
         this.alienBulletSpeed = 4;
 
         this.time.addEvent({
-            delay: 1000,  
-            callback: this.fireAlienBullet,
+            delay: 1000,
+            callback: () => this.fireAlienBullet("norm"),
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.addEvent({
+            delay: 800,
+            callback: () => this.fireAlienBullet("brut"),
             callbackScope: this,
             loop: true
         });
@@ -144,7 +154,12 @@ class Level_2 extends Phaser.Scene {
         // Put score on screen
         my.text.score = this.add.bitmapText(550, 0, "rocketSquare", "Score " + this.myScore);
 
-        
+        this.sfx.player = this.sound.add("pew-player");
+        this.sfx.norm = this.sound.add("pew-norm");
+        this.sfx.brut = this.sound.add("pew-brut");
+
+        this.sfx.norm_ex = this.sound.add("explode-norm");
+        this.sfx.brut_ex = this.sound.add("explode-brut");
         
 
     }
@@ -191,6 +206,8 @@ class Level_2 extends Phaser.Scene {
                 this.puff = this.add.sprite(
                     my.sprite.alien1.x, my.sprite.alien1.y, "blackSmoke03"
                 ).setScale(0.25).play("puff");
+
+                this.sfx.norm_ex.play({ volume: 2.5 })
             
                 bullet.y = -100;
             
@@ -247,6 +264,8 @@ class Level_2 extends Phaser.Scene {
                 this.puff = this.add.sprite(
                     my.sprite.brute.x, my.sprite.brute.y, "blackSmoke00"
                 ).setScale(0.25).play("puff");
+
+                this.sfx.brut_ex.play({ volume: 2.5 })
         
                 bullet.y = -100;
                 this.my.sprite.brute.setAlpha(0);
@@ -277,27 +296,25 @@ class Level_2 extends Phaser.Scene {
         }
     }
 
-    fireAlienBullet() {
-        let my = this.my;
-        let bullet = this.add.sprite(
-            my.sprite.alien1.x,
-            my.sprite.alien1.y + my.sprite.alien1.displayHeight / 2,
-            "norm-proj"
-        );
-        bullet.setScale(0.5);
-        my.sprite.alienBullets.push(bullet);
-        this.sfx.norm.play()
+    fireAlienBullet(type) {
+        let bullet, sprite;
+    
+        if (type === "norm") {
+            sprite = this.my.sprite.alien1;
+            bullet = this.add.sprite(sprite.x, sprite.y + sprite.displayHeight / 2, "norm-proj");
+            bullet.isBrute = false;
+            this.sfx.norm.play()
 
-        if (my.sprite.brute) {
-            let bruteBullet = this.add.sprite(
-                my.sprite.brute.x,
-                my.sprite.brute.y + my.sprite.brute.displayHeight / 2,
-                "brut-proj"
-            );
-            bruteBullet.setScale(0.5);
-            bruteBullet.isBrute = true;
-            my.sprite.alienBullets.push(bruteBullet);
+        } else if (type === "brut") {
+            sprite = this.my.sprite.brute;
+            bullet = this.add.sprite(sprite.x, sprite.y + sprite.displayHeight / 2, "brut-proj");
+            bullet.isBrute = true;
             this.sfx.brut.play()
+        }
+    
+        if (bullet) {
+            bullet.setScale(0.5);
+            this.my.sprite.alienBullets.push(bullet);
         }
     }
 
